@@ -5,8 +5,8 @@ use std::os::windows::process::CommandExt;
 
 use Root::{Multiple, Single, Zero};
 
-const EXEC_PATH_CMD: &str = "7z.exe";
-const EXEC_PATH_GUI: &str = "7zg.exe";
+const EXEC_PATH_CMD: &str = "NanaZipC.exe";
+const EXEC_PATH_GUI: &str = "NanaZipG.exe";
 
 const OUTPUT_PATH: &str = "Path = ";
 
@@ -98,5 +98,5 @@ fn extract(archive_path: &Path, destination_path: &Path) {
         .args(["x", format!("-o{}", destination_path_str).as_str(), archive_path_str])
         .creation_flags(CREATE_NO_WINDOW)
         .status()
-        .unwrap_or_else(|err| panic!("7z GUI {} should be executed successfully: {}", EXEC_PATH_GUI, err));
+        .unwrap_or_else(|err| panic!("NanaZip GUI {} should be executed successfully: {}", EXEC_PATH_GUI, err));
 }
