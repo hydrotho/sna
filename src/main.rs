@@ -22,6 +22,15 @@ enum Root {
     Multiple,
 }
 
+#[link(name = "user32")]
+extern "system" {
+    fn FindWindowA(lpClassName: *const i8, lpWindowName: *const i8) -> isize;
+    fn ShowWindow(hWnd: isize, nCmdShow: i32) -> i32;
+    fn SetForegroundWindow(hWnd: isize) -> i32;
+}
+
+const SW_RESTORE: i32 = 9;
+
 fn main() {
     for archive_path_str in std::env::args().skip(1) {
         let archive_path = Path::new(archive_path_str.as_str());
@@ -92,11 +101,26 @@ fn extract(archive_path: &Path, destination_path: &Path) {
     let destination_path_str = destination_path.to_str()
         .unwrap_or_else(|| panic!("destination_path {} should be able to convert to str", destination_path.display()));
 
-    Command::new(EXEC_PATH_GUI)
-        // x : eXtract files with full paths
-        // -o{Directory} : set Output directory
+    let mut child = Command::new(EXEC_PATH_GUI)
         .args(["x", format!("-o{}", destination_path_str).as_str(), archive_path_str])
         .creation_flags(CREATE_NO_WINDOW)
-        .status()
+        .spawn()
         .unwrap_or_else(|err| panic!("NanaZip GUI {} should be executed successfully: {}", EXEC_PATH_GUI, err));
+
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    unsafe {
+        let hwnd = FindWindowA(
+            std::ptr::null(),
+            "NanaZip\0".as_ptr() as *const i8
+        );
+
+        if hwnd != 0 {
+            ShowWindow(hwnd, SW_RESTORE);
+            SetForegroundWindow(hwnd);
+        }
+    }
+
+    child.wait()
+        .unwrap_or_else(|err| panic!("Failed to wait for NanaZip GUI: {}", err));
 }
